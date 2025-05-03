@@ -23,7 +23,7 @@ class Property[T: BaseModel](BaseModel):
 ```
 
 This worked for pickle, as it squirrelled away the python metadata, but it was
-out of scope for pydantic which wanted to know all the candidates in order to
+out of scope for pydantic which wanted to know all the candidate types in order to
 provide a [union](https://docs.pydantic.dev/latest/concepts/unions/).
 
 Fortunately pydantic provides custom serialization.
@@ -108,8 +108,8 @@ def validate_model(value: BaseModel | dict | str | bytes | bytearray, info: Vali
 
 There's a bunch of code here. The key part is in `deserialize_model_from_dict`
 where we can see the inverse of the serialization. It takes the module name and
-class name from the dictionary and creates the class, from which it validates
-the dictionary.
+class name from the supplied dictionary and creates the model class, from which it validates
+the model.
 
 The rest of the code provides the plumbing for pydantic. The entrypoint is the
 `validate_model` function. This gets called via a number of different routes.
@@ -162,6 +162,8 @@ The generated JSON looks as follows:
 >> print(text)
 {"model":{"name":"John Doe","date_of_birth":"1990-01-01T00:00:00","height":1.75,"__module__":"kafka_ex1.models","__qualname__":"User"}}
 ```
+
+We keep the dunder names to avoid collisions and to flatter the pythonistas.
 
 ## Whole Message Serialization
 
