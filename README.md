@@ -170,4 +170,31 @@ We keep the dunder names to avoid collisions and to flatter the pythonistas.
 It turned out that it would be useful to know the meta data of the root message, as we wanted to save all the messages to a data store and replay them. This turned out to require just one extra function.
 
 ```python
+import json
+import importlib
+
+from pydantic import BaseModel, ValidationInfo
+
+
+def serialize_model_to_dict(model: BaseModel) -> dict:
+    dct = model.model_dump(mode='json')
+    dct['__module__'] = model.__class__.__module__
+    dct['__qualname__'] = model.__class__.__qualname__
+    return dct
+
+
+def serialize_model_to_json_str(model: BaseModel) -> str:
+    dct = serialize_model_to_dict(model)
+    return json.dumps(dct)
 ```
+
+Now we can create the metadata at the root level.
+
+```python
+>>> update = Update(model=user)
+>>> serialize_model_to_json_str(update)
+{"model": {"name": "John Doe", "date_of_birth": "1990-01-01T00:00:00", "height": 1.75, "__module__": "demo.models", "__qualname__": "User"}, "__module__": "demo.models", "__qualname__": "Update"}
+```
+
+We can see there is metadata at the root level.
+
