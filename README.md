@@ -198,3 +198,12 @@ Now we can create the metadata at the root level.
 
 We can see there is metadata at the root level.
 
+Finally we can do a full roundtrip with any base model:
+
+```python
+>>> update = Update(model=user)
+>>> text = serialize_model_to_json_str(update)
+>>> roundtrip = deserialize_model_from_json(text)
+```
+
+Now we can save and retrieve any model. Happy days!
