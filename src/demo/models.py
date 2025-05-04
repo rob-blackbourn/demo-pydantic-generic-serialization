@@ -8,7 +8,7 @@ from pydantic import (
     PlainValidator
 )
 
-from .serialization import serialize_model_to_dict, validate_model
+from .serialization import serialize_model, validate_model
 
 
 class User(BaseModel):
@@ -31,6 +31,6 @@ class Address(BaseModel):
 class Update[T: BaseModel](BaseModel):
     model: Annotated[
         T,
-        PlainSerializer(serialize_model_to_dict),
+        PlainSerializer(serialize_model),
         PlainValidator(validate_model)
     ]

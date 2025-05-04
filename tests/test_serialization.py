@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from demo.models import User, Location, Update
 from demo.serialization import (
-    serialize_model_to_json_str,
+    serialize_model_to_json,
     deserialize_model_from_json
 )
 
@@ -15,7 +15,7 @@ def test_serialization() -> None:
         date_of_birth=datetime(1990, 1, 1),
         height=1.75
     )
-    user_json_str = serialize_model_to_json_str(user)
+    user_json_str = serialize_model_to_json(user)
     deserialized_user = deserialize_model_from_json(user_json_str)
     assert user == deserialized_user
 
@@ -24,12 +24,12 @@ def test_serialization() -> None:
         latitude=Decimal('40.785091'),
         longitude=Decimal('-73.968285')
     )
-    location_json_str = serialize_model_to_json_str(location)
+    location_json_str = serialize_model_to_json(location)
     deserialized_location = deserialize_model_from_json(location_json_str)
     assert location == deserialized_location
 
     update = Update(model=user)
-    update_json_str = serialize_model_to_json_str(update)
+    update_json_str = serialize_model_to_json(update)
     deserialized_update = deserialize_model_from_json(update_json_str)
     assert update == deserialized_update
 

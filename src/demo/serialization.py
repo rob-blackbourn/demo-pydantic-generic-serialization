@@ -4,7 +4,7 @@ import importlib
 from pydantic import BaseModel, ValidationInfo
 
 
-def serialize_model_to_dict(model: BaseModel) -> dict:
+def serialize_model(model: BaseModel) -> dict:
     """Serialize a Pydantic model to a dictionary.
 
     Two fields are added to the root level of the dictionary:
@@ -20,7 +20,7 @@ def serialize_model_to_dict(model: BaseModel) -> dict:
     class Update[T: BaseModel](BaseModel):
         model: Annotated[
             T,
-            PlainSerializer(serialize_model_to_dict),
+            PlainSerializer(serialize_model),
             PlainValidator(validate_model)
         ]
     ```
@@ -39,23 +39,7 @@ def serialize_model_to_dict(model: BaseModel) -> dict:
     return dct
 
 
-def serialize_model_to_json_str(model: BaseModel) -> str:
-    """Serialize a Pydantic model to a JSON string.
-
-    The serialization will inject metadata whenever it encounters a pydantic
-    `BaseModel` allowing deserialization by `deserialize_model_from_json`.
-
-    Args:
-        model (BaseModel): The model to serialize.
-
-    Returns:
-        str: A JSON string representation of the model.
-    """
-    dct = serialize_model_to_dict(model)
-    return json.dumps(dct)
-
-
-def deserialize_model_from_dict(dct: dict) -> BaseModel:
+def _deserialize_model(dct: dict) -> BaseModel:
     """This function deserializes a dictionary into a Pydantic model.
 
     It uses the `__module__` and `__qualname__` keys in the dictionary to
@@ -74,6 +58,22 @@ def deserialize_model_from_dict(dct: dict) -> BaseModel:
     return model
 
 
+def serialize_model_to_json(model: BaseModel) -> str:
+    """Serialize a Pydantic model to a JSON string.
+
+    The serialization will inject metadata whenever it encounters a pydantic
+    `BaseModel` allowing deserialization by `deserialize_model_from_json`.
+
+    Args:
+        model (BaseModel): The model to serialize.
+
+    Returns:
+        str: A JSON string representation of the model.
+    """
+    dct = serialize_model(model)
+    return json.dumps(dct)
+
+
 def deserialize_model_from_json(data: str | bytes | bytearray) -> BaseModel:
     """Deserialize a model from a JSON string.
 
@@ -84,20 +84,20 @@ def deserialize_model_from_json(data: str | bytes | bytearray) -> BaseModel:
         BaseModel: The deserialized Pydantic model.
     """
     dct = json.loads(data)
-    model = deserialize_model_from_dict(dct)
+    model = _deserialize_model(dct)
     return model
 
 
 def validate_model(value: BaseModel | dict | str, info: ValidationInfo) -> BaseModel:
     """Validate a pydantic model.
 
-    This can be used in combination with `serialize_model_to_dict` in the following way:
+    This can be used in combination with `serialize_model` in the following way:
 
     ```python
     class Update[T: BaseModel](BaseModel):
         model: Annotated[
             T,
-            PlainSerializer(serialize_model_to_dict),
+            PlainSerializer(serialize_model),
             PlainValidator(validate_model)
         ]
     ```
@@ -120,7 +120,7 @@ def validate_model(value: BaseModel | dict | str, info: ValidationInfo) -> BaseM
             if isinstance(value, BaseModel):
                 return value
             elif isinstance(value, dict):
-                return deserialize_model_from_dict(value)
+                return _deserialize_model(value)
             else:
                 raise ValueError(
                     f"unhandled type for mode {info.mode}: {type(value)}"
@@ -131,7 +131,7 @@ def validate_model(value: BaseModel | dict | str, info: ValidationInfo) -> BaseM
             if isinstance(value, str):
                 return deserialize_model_from_json(value)
             elif isinstance(value, dict):
-                return deserialize_model_from_dict(value)
+                return _deserialize_model(value)
             else:
                 raise ValueError(
                     f"unhandled type for mode {info.mode}: {type(value)}"
